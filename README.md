@@ -1,7 +1,7 @@
-# Into To Authentication Without Passport.js
-> Using NodeJS and Express
+# Inro To Authentication Without Passport.js
+> Using Node and Express
 
-This app shows a barebones skeleton of what is needed for basic authentication in your Node app. Made without using [Passport](http://www.passportjs.org/) or any other authentication framework / library.
+This app shows a barebones skeleton of what is needed for basic authentication in your Node app. *Made without using* [Passport](http://www.passportjs.org/) or any other authentication framework / library.
 
 ### NOT RECCOMENDED
 This app is used *strictly for practice / learning purposes* and to gain insight into the lower level workings of authentication within [NodeJS](https://nodejs.org/en/). It is very unsecure to write your own code for handling user authentication. **Stick with a library written by SECURITY EXPERTS!**
