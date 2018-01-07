@@ -8,10 +8,11 @@ var User = require("./models/user");
 
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
+//CREATE A SESSION
 app.use(clientSessions({
     cookieName: "session",
     secret: "random",
-    duration: 30 * 60 * 1000,
+    duration: 30 * 60 * 1000, //in ms
     activeDuration: 5 * 60 * 1000
 }));
 
@@ -27,7 +28,7 @@ app.get('/register', function(req, res) {
 });
 
 app.post('/register', function(req, res) {
-    
+    //TAKES PASSWORD FIELD AND SAVES IT TO HASH VARIABLE
     var salt = bcrypt.genSaltSync(10);
     var hash = bcrypt.hashSync(req.body.password, salt);
 
@@ -35,7 +36,7 @@ app.post('/register', function(req, res) {
         fName: req.body.fName,
         lName: req.body.lName,
         email: req.body.email,
-        password: hash
+        password: hash //SETS PASSWORD IN USER OBJECT TO THE HASH
     }
 
     User.create(userObj, function(err, user){
@@ -49,6 +50,7 @@ app.post('/register', function(req, res) {
             res.render("register", {error: error});
         }
         else {
+            //SETS THE SESSION TO THE USER OBJECT
             req.session.user = user;
             res.redirect("/dashboard");
         }
@@ -66,6 +68,7 @@ app.post('/login', function(req, res) {
             error = "That user doesn't exist";
             res.render("login", {error: error});
         } else {
+            //DECRYPTS THE PASSWORDS AND COMPARES THEM
             if(bcrypt.compareSync(req.body.password, user.password)){
                 req.session.user = user;
                 res.redirect("/dashboard");
@@ -79,12 +82,15 @@ app.post('/login', function(req, res) {
 });
 
 app.get('/dashboard', function(req, res) {
+    //IF THERE IS A SESSION AND THE IS A USER IN THE SESSION
     if(req.session && req.session.user){
         User.findOne({email: req.session.user.email}, function(err, user){
             if(!user){
+                //IF THE USER SESSION EXPIRES, RESET THE SESSION
                 req.session.reset();
                 res.redirect("/login");
             } else {
+                //SEND THE CURRENT USER OBJECT TO THE RESPONSE HEADER AND IT BECOMES AVAILABLE TO ALL TEMPLATES
                 res.locals.user = user;
                 res.render("dashboard");
             }
