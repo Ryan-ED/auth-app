@@ -12,7 +12,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 //CREATE A SESSION
 app.use(clientSessions({
     cookieName: "session",
-    secret: "random",
+    secret: "random", //NEEDS TO BE A VERY LONG RANDOM STRING. SET IT ONCE ONLY (HARDCODE)
     duration: 30 * 60 * 1000, //in ms
     activeDuration: 5 * 60 * 1000,
     httpOnly: true, //DON'T LET JS CODE ACCESS COOKIES
