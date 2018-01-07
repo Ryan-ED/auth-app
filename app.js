@@ -16,8 +16,42 @@ app.use(clientSessions({
     activeDuration: 5 * 60 * 1000
 }));
 
+//===========================
+//MIDDLEWARE
+//===========================
+app.use(function(req, res, next) { //RUN ON EVERY REQUEST
+    // console.log(req.url);
+    if(req.session && req.session.user){
+        User.findOne({email: req.session.user.email}, function(err, user){
+            //IF A USER WAS FOUND, MAKE THE USER AVAILABLE IN THE HEADER
+            if(user){
+                req.user = user;
+                delete req.user.password; //DON'T MAKE THE PASSWORD AVAILABLE
+                req.session.user = user; //UPDATE THE SESSION INFO
+                res.locals.user = user; //MAKE AVAILABLE TO TEMPLATES
+            }
+            next();
+        });
+    } else {
+        next(); //IF NO SESSION WAS FOUND, DO NOTHING
+    }
+});
+
+function requireLogin(req, res, next){
+    //IF USER ISN'T LOGGED IN, REDIRECT TO LOGIN PAGE
+    if(!req.user){
+        res.redirect("/login");
+    } else {
+        next();
+    }
+}
+
 mongoose.connect("mongodb://localhost/auth_app", {useMongoClient: true});
 mongoose.Promise = global.Promise;
+
+//===========================
+//ROUTES
+//===========================
 
 app.get('/', function(req, res) {
     res.render("index");
@@ -63,7 +97,7 @@ app.get('/login', function(req, res) {
 
 app.post('/login', function(req, res) {
     User.findOne({email: req.body.email}, function(err, user){
-        var error = "";
+        var error = "Welcome!";
         if(!user){
             error = "That user doesn't exist";
             res.render("login", {error: error});
@@ -81,23 +115,27 @@ app.post('/login', function(req, res) {
     });
 });
 
-app.get('/dashboard', function(req, res) {
-    //IF THERE IS A SESSION AND THE IS A USER IN THE SESSION
-    if(req.session && req.session.user){
-        User.findOne({email: req.session.user.email}, function(err, user){
-            if(!user){
-                //IF THE USER SESSION EXPIRES, RESET THE SESSION
-                req.session.reset();
-                res.redirect("/login");
-            } else {
-                //SEND THE CURRENT USER OBJECT TO THE RESPONSE HEADER AND IT BECOMES AVAILABLE TO ALL TEMPLATES
-                res.locals.user = user;
-                res.render("dashboard");
-            }
-        })
-    } else {
-        res.redirect("/login");
-    }
+app.get('/dashboard', requireLogin, function(req, res) {
+    //========================================================================= - ALL HANDLED BY MIDDLEWARE & requireLogin
+    // //IF THERE IS A SESSION AND THE IS A USER IN THE SESSION
+    // if(req.session && req.session.user){
+    //     User.findOne({email: req.session.user.email}, function(err, user){
+    //         if(!user){
+    //             //IF THE USER SESSION EXPIRES, RESET THE SESSION
+    //             req.session.reset();
+    //             res.redirect("/login");
+    //         } else {
+    //             //SEND THE CURRENT USER OBJECT TO THE RESPONSE HEADER AND IT BECOMES AVAILABLE TO ALL TEMPLATES
+    //             res.locals.user = user;
+    //             res.render("dashboard");
+    //         }
+    //     })
+    // } else {
+    //     res.redirect("/login");
+    // }
+    //=========================================================================
+    
+    res.render("dashboard");
 });
 
 app.get('*', function(req, res) {
