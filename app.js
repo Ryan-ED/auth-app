@@ -4,6 +4,7 @@ var bodyParser = require("body-parser");
 var mongoose = require("mongoose");
 var clientSessions = require("client-sessions");
 var bcrypt = require('bcryptjs');
+var csrf = require("csurf");
 var User = require("./models/user");
 
 app.set("view engine", "ejs");
@@ -13,9 +14,13 @@ app.use(clientSessions({
     cookieName: "session",
     secret: "random",
     duration: 30 * 60 * 1000, //in ms
-    activeDuration: 5 * 60 * 1000
+    activeDuration: 5 * 60 * 1000,
+    httpOnly: true, //DON'T LET JS CODE ACCESS COOKIES
+    // secure: true, //ONLY SET COOKIES OVER HTTPS
+    ephemiral: true //DESTROY COOKIES WHEN BROWSER CLOSES
 }));
-
+//GENERATES A UNIQUE TOKEN ON EVERY REQUEST THAT NEEDS TO MATCH THE TOKEN ON THE FORMS
+app.use(csrf());
 //===========================
 //MIDDLEWARE
 //===========================
@@ -58,7 +63,7 @@ app.get('/', function(req, res) {
 });
 
 app.get('/register', function(req, res) {
-    res.render("register");
+    res.render("register", {csrfToken: req.csrfToken()}); //PASSES THE TOKEN AS A PARAMATER
 });
 
 app.post('/register', function(req, res) {
@@ -92,7 +97,7 @@ app.post('/register', function(req, res) {
 });
 
 app.get('/login', function(req, res) {
-    res.render("login");
+    res.render("login", {csrfToken: req.csrfToken()});
 });
 
 app.post('/login', function(req, res) {
